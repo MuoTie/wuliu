@@ -2,11 +2,16 @@ package com.mba.controller;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mba.common.QueryPageParam;
 import com.mba.entity.User;
 import com.mba.service.IUserService;
+import io.swagger.models.Swagger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -52,6 +57,45 @@ public class UserController {
     public List<User> listP(@RequestBody User user){
         LambdaQueryWrapper<User> lambdaQueryWrapper =new LambdaQueryWrapper<>();
         lambdaQueryWrapper.like(User::getName,user.getName());
+
         return userService.list(lambdaQueryWrapper);
+    }
+
+    @PostMapping("/listPage")
+    public List<User> listPage(@RequestBody QueryPageParam query){
+
+        HashMap param = query.getParam();
+        String name = (String)param.get("name");
+
+
+        Page page = new Page();
+        page.setCurrent(query.getPageNum());
+        page.setSize(query.getPageSize());
+
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.like(User::getName,name);
+
+        IPage result = userService.page(page, lambdaQueryWrapper);
+        System.out.println("Total="+ result.getTotal());
+        return result.getRecords();
+    }
+
+    @PostMapping("/listPageC")
+    public List<User> listPageC(@RequestBody QueryPageParam query){
+
+        HashMap param = query.getParam();
+        String name = (String)param.get("name");
+
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.like(User::getName,name);
+
+        Page page = new Page();
+        page.setCurrent(query.getPageNum());
+        page.setSize(query.getPageSize());
+
+//        IPage result = userService.pageC(page);
+        IPage result = userService.pageCC(page,lambdaQueryWrapper);
+        System.out.println("Total="+ result.getTotal());
+        return result.getRecords();
     }
 }
