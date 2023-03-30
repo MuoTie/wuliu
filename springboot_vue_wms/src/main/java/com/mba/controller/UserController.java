@@ -3,8 +3,10 @@ package com.mba.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mba.common.QueryPageParam;
+import com.mba.common.Result;
 import com.mba.entity.User;
 import com.mba.service.IUserService;
 import io.swagger.models.Swagger;
@@ -16,7 +18,7 @@ import java.util.List;
 
 /**
  * <p>
- *  前端控制器
+ * 前端控制器
  * </p>
  *
  * @author z
@@ -27,45 +29,78 @@ import java.util.List;
 public class UserController {
     @Autowired
     private IUserService userService;
+
     @GetMapping("/list")
-    public List<User> List(){
+//    @CrossOrigin
+    public List<User> List() {
         return userService.list();
+
     }
 
     //新增
     @PostMapping("/save")
-    public boolean save(@RequestBody User user){
-        return userService.save(user);
+    public Result save(@RequestBody User user) {
+        return userService.save(user)?Result.suc():Result.fail();
     }
-    //修改
-    @PostMapping("/mod")
-    public boolean mod(@RequestBody User user){
-        return userService.updateById(user);
-    }
-    //新增或修改
-    @PostMapping("/saveOrMod")
-    public boolean saveOrMod(@RequestBody User user){
-        return userService.saveOrUpdate(user);
+    //更新
+    @PostMapping("/update")
+    public Result update(@RequestBody User user) {
+        return userService.updateById(user)?Result.suc():Result.fail();
     }
     //删除
+    @GetMapping("/del")
+    public Result del(@RequestParam String id) {
+        return userService.removeById(id)?Result.suc():Result.fail();
+    }
+
+    @PostMapping("/login")
+    public Result login(@RequestBody User user) {
+        List<User> list = userService.lambdaQuery()
+                .eq(User::getNo, user.getNo())
+                .eq(User::getPassword, user.getPassword()).list();
+        return list.size()>0?Result.suc(list.get(0)):Result.fail();
+    }
+
+
+    //修改
+    @PostMapping("/mod")
+    public boolean mod(@RequestBody User user) {
+        return userService.updateById(user);
+    }
+
+    //新增或修改
+    @PostMapping("/saveOrMod")
+    public boolean saveOrMod(@RequestBody User user) {
+        return userService.saveOrUpdate(user);
+    }
+
+    //删除
     @GetMapping("/delete")
-    public boolean delete(Integer id){
+    public boolean delete(Integer id) {
         return userService.removeById(id);
     }
+
     //查询
     @PostMapping("/listP")
-    public List<User> listP(@RequestBody User user){
-        LambdaQueryWrapper<User> lambdaQueryWrapper =new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.like(User::getName,user.getName());
+    public Result listP(@RequestBody User user) {
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.isNotBlank(user.getName())) {
+            lambdaQueryWrapper.like(User::getName, user.getName());
+        }
 
-        return userService.list(lambdaQueryWrapper);
+        return Result.suc(userService.list(lambdaQueryWrapper));
+    }
+    @GetMapping("/findByNo")
+    public Result findByNo(@RequestParam String no){
+        List list = userService.lambdaQuery().eq(User::getNo, no).list();
+        return list.size()>0?Result.suc(list):Result.fail();
     }
 
     @PostMapping("/listPage")
-    public List<User> listPage(@RequestBody QueryPageParam query){
+    public List<User> listPage(@RequestBody QueryPageParam query) {
 
         HashMap param = query.getParam();
-        String name = (String)param.get("name");
+        String name = (String) param.get("name");
 
 
         Page page = new Page();
@@ -73,29 +108,58 @@ public class UserController {
         page.setSize(query.getPageSize());
 
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.like(User::getName,name);
+        lambdaQueryWrapper.like(User::getName, name);
 
         IPage result = userService.page(page, lambdaQueryWrapper);
-        System.out.println("Total="+ result.getTotal());
+        System.out.println("Total=" + result.getTotal());
         return result.getRecords();
     }
 
     @PostMapping("/listPageC")
-    public List<User> listPageC(@RequestBody QueryPageParam query){
+    public Result listPageC(@RequestBody QueryPageParam query) {
 
         HashMap param = query.getParam();
-        String name = (String)param.get("name");
+        String name = (String) param.get("name");
 
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.like(User::getName,name);
+        lambdaQueryWrapper.like(User::getName, name);
 
         Page page = new Page();
         page.setCurrent(query.getPageNum());
         page.setSize(query.getPageSize());
 
 //        IPage result = userService.pageC(page);
-        IPage result = userService.pageCC(page,lambdaQueryWrapper);
-        System.out.println("Total="+ result.getTotal());
-        return result.getRecords();
+        IPage result = userService.pageCC(page, lambdaQueryWrapper);
+        System.out.println("Total=" + result.getTotal());
+        return Result.suc(result.getRecords(), result.getTotal());
+    }
+
+    @PostMapping("/listPageCC")
+    public Result listPageCC(@RequestBody QueryPageParam query) {
+
+        HashMap param = query.getParam();
+        String name = (String) param.get("name");
+        String sex = (String) param.get("sex");
+
+
+
+        Page<User> page = new Page();
+        page.setCurrent(query.getPageNum());
+        page.setSize(query.getPageSize());
+
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+
+        if(StringUtils.isNotBlank(name) && !"null".equals(name)){
+            lambdaQueryWrapper.like(User::getName, name);
+        }
+        if(StringUtils.isNotBlank(sex) ){
+            lambdaQueryWrapper.eq(User::getSex, sex);
+        }
+
+
+//        IPage result = userService.pageC(page);
+        IPage result = userService.pageCC(page, lambdaQueryWrapper);
+        System.out.println("Total=" + result.getTotal());
+        return Result.suc(result.getRecords(), result.getTotal());
     }
 }

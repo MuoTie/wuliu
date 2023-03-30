@@ -22,5 +22,5 @@ public interface UserMapper extends BaseMapper<User> {
 
     IPage<User> pageC(Page page);
 
-    IPage pageCC(Page page, @Param(Constants.WRAPPER)Wrapper wrapper);
+    IPage<User> pageCC(Page page, @Param(Constants.WRAPPER)Wrapper wrapper);
 }

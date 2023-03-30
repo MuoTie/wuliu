@@ -41,7 +41,7 @@ public class CodeGenerator {
 
         // 全局配置
         GlobalConfig gc = new GlobalConfig();
-        String projectPath = System.getProperty("user.dir")+"/springboot_vue_wms";
+        String projectPath = System.getProperty("user.dir") + "./springboot_vue_wms";
         gc.setOutputDir(projectPath + "/src/main/java");
         gc.setAuthor("z");
         gc.setOpen(false);
@@ -60,7 +60,12 @@ public class CodeGenerator {
         // 包配置
         PackageConfig pc = new PackageConfig();
 //        pc.setModuleName(scanner("模块名"));
-        pc.setParent("com.mba");
+        pc.setParent("com.mba")
+                .setEntity("entity")
+                .setMapper("mapper")
+                .setService("service")
+                .setServiceImpl("service.impl")
+                .setController("controller");
         mpg.setPackageInfo(pc);
 
         // 自定义配置
